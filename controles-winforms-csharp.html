@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controles de Windows Forms en C#</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0e1220;--surface:#161c2e;--surface2:#1d2540;--line:#2a3358;
+  --text:#e6e9f5;--muted:#9aa3c2;--accent:#a98bff;--accent2:#4fd1c5;--code:#0a0e1a;
+  --head:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 var(--body)}
+a{color:var(--accent2)}
+:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.hero{max-width:1100px;margin:0 auto;padding:56px 24px 32px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}
+.hero h1{font:800 clamp(2rem,5vw,3.4rem)/1.05 var(--head);margin:0 0 16px;letter-spacing:-.02em}
+.hero p{color:var(--muted);max-width:52ch;margin:0 0 12px}
+.badge{display:inline-block;background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-size:.9rem;color:var(--accent);margin-bottom:18px}
+
+.win{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 0 0 6px rgba(169,139,255,.08)}
+.win .bar{background:var(--surface2);padding:8px 14px;font:600 .85rem var(--mono);color:var(--muted);display:flex;justify-content:space-between}
+.win .box{padding:20px;display:grid;gap:12px}
+.m-lbl{font-size:.9rem;color:var(--muted)}
+.m-txt{background:var(--code);border:1px solid var(--line);border-radius:4px;padding:6px 10px;font:.9rem var(--mono)}
+.m-btn{justify-self:start;background:var(--accent);color:#14102a;border-radius:4px;padding:7px 18px;font-weight:700}
+.m-chk{display:flex;gap:8px;align-items:center;font-size:.9rem}
+.m-chk i{width:16px;height:16px;border:2px solid var(--accent2);border-radius:3px;display:inline-block;background:var(--accent2)}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(14,18,32,.94);border-bottom:1px solid var(--line);padding:12px 24px}
+.top .in{max-width:1100px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.top input{flex:1;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font:inherit}
+.top input::placeholder{color:var(--muted)}
+
+.layout{max-width:1100px;margin:0 auto;padding:24px;display:grid;grid-template-columns:200px 1fr;gap:36px}
+nav.idx{position:sticky;top:calc(env(safe-area-inset-top,0px) + 84px);align-self:start;max-height:calc(100vh - 110px);overflow:auto;display:flex;flex-direction:column;gap:2px}
+nav.idx a{color:var(--muted);text-decoration:none;padding:5px 10px;border-left:2px solid var(--line);font-size:.95rem}
+nav.idx a:hover{color:var(--text);border-left-color:var(--accent)}
+nav.idx b{font:700 .85rem var(--head);color:var(--text);padding:12px 10px 4px}
+
+main{min-width:0}
+section.blk{margin-bottom:56px}
+h2{font:800 1.9rem/1.15 var(--head);letter-spacing:-.01em;margin:0 0 8px}
+h3{font:600 1.05rem var(--head);margin:18px 0 6px;color:var(--accent2)}
+.lead{color:var(--muted);margin:0 0 20px;max-width:65ch}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:0;margin:0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.steps li::before{content:counter(s);display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#14102a;font-weight:700;margin-bottom:8px}
+.steps b{display:block}
+
+.ctl{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:20px}
+.ctl h2{font-size:1.5rem}
+.ctl .pre{font:.85rem var(--mono);color:var(--accent)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+dl{margin:0}
+dt{font:.9rem var(--mono);color:var(--accent2);margin-top:8px}
+dd{margin:0 0 0 0;color:var(--text);font-size:.95rem}
+.cw{position:relative;margin-top:16px}
+pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:8px;padding:16px;overflow-x:auto;font:.85rem/1.55 var(--mono);color:#d5dcff}
+.cp{position:absolute;top:8px;right:8px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 10px;font:.8rem var(--body);cursor:pointer}
+.cp:hover{color:var(--text)}
+
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:.95rem}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--accent);font-weight:700}
+td:first-child{font-family:var(--mono);color:var(--accent2);white-space:nowrap}
+.tip{border-left:4px solid var(--accent);background:var(--surface2);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+#vacio{display:none;color:var(--muted);padding:20px;border:1px dashed var(--line);border-radius:10px}
+footer{text-align:center;color:var(--muted);padding:32px 24px 48px;font-size:.9rem}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;padding-top:36px}
+  .layout{grid-template-columns:1fr;padding:16px}
+  nav.idx{position:static;flex-direction:row;overflow-x:auto;max-height:none;padding-bottom:6px}
+  nav.idx a{white-space:nowrap;border-left:0;border-bottom:2px solid var(--line)}
+  nav.idx b{display:none}
+  .cols{grid-template-columns:1fr}
+}
+
+.hero{display:block;max-width:none;margin:0;padding:80px 24px 60px;background:radial-gradient(900px 420px at 88% -10%,rgba(169,139,255,.38),transparent 60%),radial-gradient(760px 380px at 4% 115%,rgba(79,209,197,.30),transparent 60%),radial-gradient(500px 300px at 55% 40%,rgba(255,107,157,.14),transparent 70%),var(--bg);border-bottom:1px solid var(--line)}
+.hin{max-width:1052px;margin:0 auto}
+.hero h1{font-size:clamp(2.4rem,7.5vw,4.8rem);line-height:1;color:#e9e1ff;background:linear-gradient(90deg,#ffffff,#cbb8ff 45%,#7ee8dc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.15rem;color:#c3cbea}
+.cats{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.cats a{text-decoration:none;color:var(--text);font-weight:700;border:1.5px solid var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent);border-radius:999px;padding:8px 18px;transition:transform .15s,background .15s}
+.cats a:hover{transform:translateY(-2px);background:color-mix(in srgb,var(--cc) 32%,transparent)}
+.badge{background:rgba(169,139,255,.16);border-color:rgba(169,139,255,.5)}
+.steps li{border-top:3px solid var(--accent2)}
+.steps li:nth-child(2){border-top-color:var(--accent)}
+.steps li:nth-child(3){border-top-color:#ffb454}
+.steps li:nth-child(4){border-top-color:#ff6b9d}
+.cat{display:flex;align-items:center;gap:14px;font:800 1.7rem var(--head);margin:52px 0 18px;color:var(--cc)}
+.cat::after{content:"";flex:1;height:2px;background:linear-gradient(90deg,var(--cc),transparent)}
+.ctl{border-left:5px solid var(--cc);background:linear-gradient(135deg,rgba(255,255,255,.04),transparent 45%),var(--surface)}
+.ctl .pre{color:var(--cc);font-weight:600}
+.ctl h2{display:flex;align-items:center;gap:12px}
+.ctl h3{color:var(--cc)}
+.ctl dt{color:var(--cc)}
+.ic{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:10px;font-size:1.3rem;background:color-mix(in srgb,var(--cc) 20%,transparent)}
+.use{background:color-mix(in srgb,var(--cc) 12%,transparent);border:1px solid color-mix(in srgb,var(--cc) 40%,transparent);border-radius:8px;padding:10px 14px;margin:0 0 10px;font-size:.97rem}
+.use b{color:var(--cc)}
+.use.warn{background:rgba(255,180,84,.10);border-color:rgba(255,180,84,.4)}
+.use.warn b{color:#ffb454}
+.qt td:first-child{font-family:var(--body);color:var(--text);white-space:normal}
+.qt td:last-child{font:600 .95rem var(--mono);color:var(--accent2)}
+nav.idx b{font-size:.9rem}
+pre i{font-style:normal}
+pre i.c{color:#6f7aa8;font-style:italic}
+pre i.s{color:#a5e8a0}
+pre i.k{color:#c4a8ff}
+pre i.n{color:#ffb454}
+pre i.t{color:#6fe0d3}
+@media (max-width:820px){.hero{padding:44px 20px 40px}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hin">
+    <span class="badge">Ingeniería en Sistemas Computacionales · 1.er semestre</span>
+    <h1>Controles de Windows Forms en C#</h1>
+    <p>Guía rápida para programar aplicaciones con ventanas: qué hace cada control, cuándo usarlo, qué propiedades y eventos necesitas y un ejemplo listo para copiar.</p>
+    <div class="cats">
+      <a href="#c-b" style="--cc:#6ea8ff">Básicos</a>
+      <a href="#c-e" style="--cc:#a98bff">Entrada de datos</a>
+      <a href="#c-s" style="--cc:#4fd1c5">Selección</a>
+      <a href="#c-o" style="--cc:#ffb454">Organización</a>
+      <a href="#c-d" style="--cc:#ff6b9d">Datos, imágenes y tiempo</a>
+    </div>
+  </div>
+</header>
+
+<div class="top"><div class="in"><input id="q" type="search" placeholder="Buscar: Button, Text, Click, Items…" aria-label="Buscar controles"></div></div>
+
+<div class="layout">
+  <nav class="idx" id="idx" aria-label="Índice"></nav>
+  <main>
+    <section class="blk" id="inicio">
+      <h2>Antes de empezar</h2>
+      <p class="lead">Windows Forms es la forma clásica de hacer programas con ventanas en C#. Dibujas los controles y luego escribes el código que responde a lo que hace el usuario.</p>
+      <ol class="steps">
+        <li><b>Crea el proyecto</b>En Visual Studio: <em>Crear proyecto → Aplicación de Windows Forms (.NET)</em>.</li>
+        <li><b>Arrastra controles</b>Del <em>Cuadro de herramientas</em> al formulario en la vista Diseño.</li>
+        <li><b>Configura propiedades</b>Selecciona el control y edita la ventana <em>Propiedades</em>. Ponle un nombre claro (<code>btnSaludar</code>, <code>txtNombre</code>).</li>
+        <li><b>Escribe el evento</b>Doble clic en el control crea su evento principal (en un botón, <code>Click</code>). Ahí va tu código.</li>
+      </ol>
+      <div class="tip"><b>Convención de nombres:</b> usa un prefijo según el tipo: <code>btn</code> botón, <code>txt</code> TextBox, <code>lbl</code> Label, <code>cmb</code> ComboBox, <code>lst</code> ListBox, <code>chk</code> CheckBox, <code>rdb</code> RadioButton, <code>dgv</code> DataGridView.</div>
+    </section>
+
+    <section class="blk" id="cual">
+      <h2>¿Qué control uso?</h2>
+      <p class="lead">Elige según lo que quieras lograr.</p>
+      <div class="tw"><table class="qt">
+        <tr><th>Quiero…</th><th>Uso</th></tr>
+        <tr><td>Que el usuario escriba texto</td><td>TextBox</td></tr>
+        <tr><td>Que escriba un número con límites</td><td>NumericUpDown</td></tr>
+        <tr><td>Que elija una fecha</td><td>DateTimePicker</td></tr>
+        <tr><td>Que elija 1 opción de muchas</td><td>ComboBox</td></tr>
+        <tr><td>Que elija 1 opción de pocas, a la vista</td><td>RadioButton</td></tr>
+        <tr><td>Que active o desactive una opción</td><td>CheckBox</td></tr>
+        <tr><td>Mostrar una lista que cambia</td><td>ListBox</td></tr>
+        <tr><td>Mostrar una tabla de registros</td><td>DataGridView</td></tr>
+        <tr><td>Mostrar un resultado o instrucción</td><td>Label</td></tr>
+        <tr><td>Avisar un error o pedir confirmación</td><td>MessageBox</td></tr>
+        <tr><td>Repetir algo cada cierto tiempo</td><td>Timer</td></tr>
+        <tr><td>Mostrar una imagen</td><td>PictureBox</td></tr>
+      </table></div>
+    </section>
+
+    <section class="blk" id="comunes">
+      <h2>Propiedades y eventos comunes</h2>
+      <p class="lead">Casi todos los controles comparten estos miembros.</p>
+      <div class="tw"><table>
+        <tr><th>Miembro</th><th>Para qué sirve</th></tr>
+        <tr><td>Name</td><td>Nombre con el que lo llamas desde el código.</td></tr>
+        <tr><td>Text</td><td>Texto visible (título, contenido o etiqueta).</td></tr>
+        <tr><td>Enabled</td><td><code>false</code> lo deshabilita: se ve gris y no responde.</td></tr>
+        <tr><td>Visible</td><td><code>false</code> lo oculta.</td></tr>
+        <tr><td>Size / Location</td><td>Tamaño y posición dentro del formulario.</td></tr>
+        <tr><td>Anchor / Dock</td><td>Cómo se ajusta cuando cambia el tamaño de la ventana.</td></tr>
+        <tr><td>BackColor / ForeColor / Font</td><td>Color de fondo, color del texto y tipo de letra.</td></tr>
+        <tr><td>TabIndex</td><td>Orden al navegar con la tecla Tab.</td></tr>
+        <tr><td>Focus()</td><td>Método que manda el cursor a ese control.</td></tr>
+        <tr><td>Click</td><td>Evento: el usuario hace clic.</td></tr>
+        <tr><td>TextChanged</td><td>Evento: cambió el texto.</td></tr>
+        <tr><td>KeyPress</td><td>Evento: se presionó una tecla.</td></tr>
+        <tr><td>Enter / Leave</td><td>Eventos: el control gana o pierde el foco.</td></tr>
+      </table></div>
+    </section>
+
+    <div id="lista"></div>
+    <div id="vacio">No hay resultados. Prueba con otra palabra, por ejemplo <b>Text</b> o <b>Click</b>.</div>
+
+    <section class="blk" id="convertir">
+      <h2>Convertir y validar datos</h2>
+      <p class="lead">Todo lo que escribe el usuario en un TextBox es texto (<code>string</code>). Para operar con números hay que convertirlo, y conviene hacerlo con <code>TryParse</code> para que el programa no se caiga.</p>
+      <div class="cw"><button class="cp">Copiar</button><pre data-code>private void btnSumar_Click(object sender, EventArgs e)
+{
+    if (double.TryParse(txtA.Text, out double a) &&
+        double.TryParse(txtB.Text, out double b))
+    {
+        lblResultado.Text = "Resultado: " + (a + b);
+    }
+    else
+    {
+        MessageBox.Show("Escribe solo números.", "Dato inválido",
+            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        txtA.Focus();
+    }
+}</pre></div>
+      <div class="tw" style="margin-top:16px"><table>
+        <tr><th>Necesito</th><th>Uso</th></tr>
+        <tr><td>Texto → entero</td><td>int.TryParse(texto, out int n)</td></tr>
+        <tr><td>Texto → decimal</td><td>double.TryParse(texto, out double d)</td></tr>
+        <tr><td>Número → texto</td><td>n.ToString() o n.ToString("F2")</td></tr>
+        <tr><td>Texto con variables</td><td>$"Hola {nombre}, tienes {edad} años"</td></tr>
+      </table></div>
+    </section>
+
+    <section class="blk" id="proyecto">
+      <h2>Mini proyecto: promedio de calificaciones</h2>
+      <p class="lead">Crea tres TextBox (<code>txtP1</code>, <code>txtP2</code>, <code>txtP3</code>), un botón <code>btnCalcular</code> y un Label <code>lblResultado</code>.</p>
+      <div class="cw"><button class="cp">Copiar</button><pre data-code>private void btnCalcular_Click(object sender, EventArgs e)
+{
+    if (!double.TryParse(txtP1.Text, out double p1) ||
+        !double.TryParse(txtP2.Text, out double p2) ||
+        !double.TryParse(txtP3.Text, out double p3))
+    {
+        MessageBox.Show("Revisa las calificaciones.");
+        return;
+    }
+
+    double promedio = (p1 + p2 + p3) / 3;
+    lblResultado.Text = $"Promedio: {promedio:F1}";
+    lblResultado.ForeColor = promedio >= 70 ? Color.LightGreen : Color.Tomato;
+}</pre></div>
+      <h3>Retos para practicar</h3>
+      <p>1) Agrega un botón <em>Limpiar</em> que vacíe los campos. 2) Permite solo números en los TextBox con <code>KeyPress</code>. 3) Muestra "Aprobado" o "Reprobado" en un segundo Label.</p>
+    </section>
+
+    <section class="blk" id="errores">
+      <h2>Errores frecuentes</h2>
+      <div class="tw"><table>
+        <tr><th>Error</th><th>Causa y solución</th></tr>
+        <tr><td>FormatException</td><td>Convertiste texto vacío o con letras. Usa <code>TryParse</code>.</td></tr>
+        <tr><td>NullReferenceException</td><td>Usas algo sin valor, por ejemplo <code>SelectedItem</code> sin selección. Revisa <code>!= null</code>.</td></tr>
+        <tr><td>El botón no hace nada</td><td>El evento no está enlazado. Borra el método y vuelve a hacer doble clic en el control.</td></tr>
+        <tr><td>CS0103 «no existe el nombre»</td><td>El Name del control no coincide con el que escribiste.</td></tr>
+        <tr><td>Se borró un evento y no compila</td><td>Quita también la línea del evento en <code>Form1.Designer.cs</code> o regenera el control.</td></tr>
+      </table></div>
+    </section>
+  </main>
+</div>
+<footer>Material de apoyo · Programación en C# con Windows Forms</footer>
+
+<script>
+const C=[
+{id:"form",n:"Form",pre:"System.Windows.Forms.Form",d:"La ventana principal. Todos los demás controles viven dentro de ella.",
+ p:[["Text","Título de la ventana."],["StartPosition","Dónde aparece (CenterScreen la centra)."],["FormBorderStyle","Estilo del borde; FixedSingle impide cambiar el tamaño."],["MaximizeBox / MinimizeBox","Muestran u ocultan esos botones."],["AcceptButton / CancelButton","Botón que se activa con Enter / Esc."]],
+ e:[["Load","Se ejecuta al abrir la ventana. Ideal para llenar listas."],["FormClosing","Se ejecuta al cerrar. Puedes cancelarlo."],["Resize","Cambió el tamaño."]],
+ c:`private void Form1_Load(object sender, EventArgs e)
+{
+    this.Text = "Mi primera app";
+    this.StartPosition = FormStartPosition.CenterScreen;
+    this.MaximizeBox = false;
+}
+
+// Abrir otra ventana
+Form2 f = new Form2();
+f.Show();         // permite usar ambas ventanas
+// f.ShowDialog(); // bloquea la anterior hasta cerrar esta`},
+{id:"label",n:"Label",pre:"Etiqueta",d:"Muestra texto que el usuario no edita: títulos, instrucciones o resultados.",
+ p:[["Text","El texto mostrado."],["AutoSize","Ajusta el tamaño al texto."],["TextAlign","Alineación del texto."],["Font / ForeColor","Letra y color."]],
+ e:[["Click","Rara vez se usa; se emplea para texto tipo enlace."]],
+ c:`lblResultado.Text = "Total: " + total;
+lblResultado.ForeColor = Color.Green;
+lblResultado.Font = new Font("Segoe UI", 14, FontStyle.Bold);`},
+{id:"button",n:"Button",pre:"Botón",d:"Ejecuta una acción cuando el usuario hace clic. Es el control que más usarás.",
+ p:[["Text","Texto del botón."],["Enabled","Actívalo o desactívalo."],["FlatStyle","Aspecto plano o clásico."],["DialogResult","Resultado al cerrar un formulario de diálogo."]],
+ e:[["Click","Clic con el mouse o Enter/Espacio con foco."],["MouseEnter / MouseLeave","El mouse entra o sale."]],
+ c:`private void btnSaludar_Click(object sender, EventArgs e)
+{
+    MessageBox.Show("Hola, " + txtNombre.Text);
+}`},
+{id:"textbox",n:"TextBox",pre:"Cuadro de texto",d:"Permite al usuario escribir. Su valor siempre es string.",
+ p:[["Text","Lo que está escrito."],["Multiline","Permite varias líneas."],["PasswordChar","Carácter que oculta lo escrito, p. ej. '*'."],["MaxLength","Máximo de caracteres."],["ReadOnly","Solo lectura."],["PlaceholderText","Texto de ayuda gris."],["SelectAll() / Clear()","Selecciona todo / borra."]],
+ e:[["TextChanged","Cambió el contenido."],["KeyPress","Se pulsó una tecla; permite filtrar lo que se escribe."],["Leave","Se pierde el foco; buen momento para validar."]],
+ c:`// Aceptar solo dígitos
+private void txtEdad_KeyPress(object sender, KeyPressEventArgs e)
+{
+    if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+        e.Handled = true;   // ignora la tecla
+}
+
+txtClave.PasswordChar = '*';
+txtNombre.Clear();
+txtNombre.Focus();`},
+{id:"combobox",n:"ComboBox",pre:"Lista desplegable",d:"El usuario elige una opción de una lista que se despliega.",
+ p:[["Items","Colección de opciones."],["DropDownStyle","DropDownList solo permite elegir; DropDown también escribir."],["SelectedItem","Objeto elegido (null si no hay)."],["SelectedIndex","Posición elegida; -1 si no hay."],["Text","Texto mostrado."]],
+ e:[["SelectedIndexChanged","El usuario cambió la selección."]],
+ c:`private void Form1_Load(object sender, EventArgs e)
+{
+    cmbCarrera.Items.AddRange(new string[] { "Sistemas", "Industrial", "Mecatrónica" });
+    cmbCarrera.DropDownStyle = ComboBoxStyle.DropDownList;
+    cmbCarrera.SelectedIndex = 0;
+}
+
+private void cmbCarrera_SelectedIndexChanged(object sender, EventArgs e)
+{
+    lblInfo.Text = "Elegiste: " + cmbCarrera.SelectedItem;
+}`},
+{id:"listbox",n:"ListBox",pre:"Lista",d:"Muestra una lista de elementos visibles; puedes agregar y quitar en tiempo de ejecución.",
+ p:[["Items","Colección de elementos."],["SelectedItem / SelectedIndex","Elemento o posición elegida."],["SelectionMode","One o MultiExtended."],["Items.Add() / Remove() / Clear()","Agregar, quitar o vaciar."],["Items.Count","Cantidad de elementos."]],
+ e:[["SelectedIndexChanged","Cambió la selección."],["DoubleClick","Doble clic en un elemento."]],
+ c:`private void btnAgregar_Click(object sender, EventArgs e)
+{
+    if (txtTarea.Text != "")
+    {
+        lstTareas.Items.Add(txtTarea.Text);
+        txtTarea.Clear();
+    }
+}
+
+private void btnQuitar_Click(object sender, EventArgs e)
+{
+    if (lstTareas.SelectedItem != null)
+        lstTareas.Items.Remove(lstTareas.SelectedItem);
+}`},
+{id:"checkbox",n:"CheckBox",pre:"Casilla de verificación",d:"Opción de sí/no. Puedes marcar varias a la vez.",
+ p:[["Checked","true si está marcada."],["Text","Descripción."],["ThreeState","Permite un tercer estado indeterminado."]],
+ e:[["CheckedChanged","Se marcó o desmarcó."]],
+ c:`private void chkAcepto_CheckedChanged(object sender, EventArgs e)
+{
+    btnEnviar.Enabled = chkAcepto.Checked;
+}`},
+{id:"radiobutton",n:"RadioButton",pre:"Botón de opción",d:"El usuario elige una sola opción dentro de un grupo. Los RadioButton del mismo contenedor (formulario, GroupBox o Panel) se excluyen entre sí.",
+ p:[["Checked","true si es la opción elegida."],["Text","Descripción."]],
+ e:[["CheckedChanged","Cambió su estado."]],
+ c:`string turno;
+if (rdbMatutino.Checked) turno = "Matutino";
+else if (rdbVespertino.Checked) turno = "Vespertino";
+else turno = "Sin elegir";`},
+{id:"groupbox",n:"GroupBox y Panel",pre:"Contenedores",d:"Agrupan otros controles. GroupBox lleva título; Panel puede tener barras de desplazamiento. Mover o deshabilitar el contenedor afecta a todo lo que tiene dentro.",
+ p:[["Text","Título (GroupBox)."],["AutoScroll","Barras de desplazamiento (Panel)."],["Controls","Colección de controles contenidos."],["Enabled","Deshabilita todo el grupo."]],
+ e:[["Paint","Se dibuja el control (uso avanzado)."]],
+ c:`grpDatos.Enabled = false;   // deshabilita todo el grupo
+
+foreach (Control c in pnlCampos.Controls)
+{
+    if (c is TextBox) c.Text = "";
+}`},
+{id:"numeric",n:"NumericUpDown",pre:"Selector numérico",d:"Campo numérico con flechas. Evita validar texto porque solo acepta números.",
+ p:[["Value","Valor actual (tipo decimal)."],["Minimum / Maximum","Límites."],["Increment","Cuánto cambia con cada flecha."],["DecimalPlaces","Decimales mostrados."]],
+ e:[["ValueChanged","Cambió el valor."]],
+ c:`nudEdad.Minimum = 15;
+nudEdad.Maximum = 99;
+int edad = (int)nudEdad.Value;   // conversión explícita`},
+{id:"datetime",n:"DateTimePicker",pre:"Selector de fecha",d:"Elige fecha y/o hora con un calendario desplegable.",
+ p:[["Value","Fecha elegida (DateTime)."],["Format","Long, Short, Time o Custom."],["CustomFormat","Ej.: dd/MM/yyyy."],["MinDate / MaxDate","Límites."]],
+ e:[["ValueChanged","Cambió la fecha."]],
+ c:`DateTime nac = dtpNacimiento.Value;
+int edad = DateTime.Today.Year - nac.Year;
+if (nac.Date > DateTime.Today.AddYears(-edad)) edad--;
+lblEdad.Text = $"Tienes {edad} años ({nac:dd/MM/yyyy})";`},
+{id:"picturebox",n:"PictureBox",pre:"Imagen",d:"Muestra una imagen. Combínalo con OpenFileDialog para que el usuario elija un archivo.",
+ p:[["Image","Imagen mostrada."],["ImageLocation","Ruta o URL de la imagen."],["SizeMode","Zoom, StretchImage, Normal…"]],
+ e:[["Click","Clic sobre la imagen."]],
+ c:`OpenFileDialog dlg = new OpenFileDialog();
+dlg.Filter = "Imágenes|*.png;*.jpg;*.jpeg";
+if (dlg.ShowDialog() == DialogResult.OK)
+{
+    picFoto.Image = Image.FromFile(dlg.FileName);
+    picFoto.SizeMode = PictureBoxSizeMode.Zoom;
+}`},
+{id:"datagrid",n:"DataGridView",pre:"Tabla",d:"Muestra datos en filas y columnas, como una hoja de cálculo. Sirve para listas de alumnos, productos, etc.",
+ p:[["Columns","Columnas (se definen en el diseñador)."],["Rows","Filas. Rows.Add(valores) agrega una."],["DataSource","Enlaza una lista u origen de datos."],["CurrentRow","Fila seleccionada."],["ReadOnly","Evita editar celdas."],["AllowUserToAddRows","Muestra la fila vacía para agregar."]],
+ e:[["CellClick","Clic en una celda."],["SelectionChanged","Cambió la fila elegida."],["CellValueChanged","Se editó una celda."]],
+ c:`dgvAlumnos.Rows.Add(txtNombre.Text, nudEdad.Value);
+
+if (dgvAlumnos.CurrentRow != null)
+{
+    string nombre = dgvAlumnos.CurrentRow.Cells[0].Value.ToString();
+    dgvAlumnos.Rows.Remove(dgvAlumnos.CurrentRow);
+}
+
+// Con una lista
+var lista = new List<string> { "Ana", "Luis" };
+dgvAlumnos.DataSource = lista.Select(x => new { Nombre = x }).ToList();`},
+{id:"timer",n:"Timer",pre:"Temporizador",d:"No se ve en pantalla. Ejecuta código cada cierto tiempo: relojes, cuentas regresivas, animaciones.",
+ p:[["Interval","Milisegundos entre cada Tick (1000 = 1 s)."],["Enabled","Activa o detiene."],["Start() / Stop()","Inicia o detiene."]],
+ e:[["Tick","Se dispara cada Interval."]],
+ c:`private void tmrReloj_Tick(object sender, EventArgs e)
+{
+    lblHora.Text = DateTime.Now.ToString("HH:mm:ss");
+}
+
+private void btnIniciar_Click(object sender, EventArgs e)
+{
+    tmrReloj.Interval = 1000;
+    tmrReloj.Start();
+}`},
+{id:"messagebox",n:"MessageBox",pre:"Cuadro de mensaje",d:"No es un control que arrastres: se llama desde código para avisar o preguntar. Devuelve qué botón se pulsó.",
+ p:[["MessageBoxButtons","OK, YesNo, OKCancel, YesNoCancel…"],["MessageBoxIcon","Information, Warning, Error, Question."],["DialogResult","Valor devuelto: Yes, No, OK, Cancel…"]],
+ e:[],
+ c:`DialogResult r = MessageBox.Show("¿Deseas salir?", "Confirmar",
+    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+if (r == DialogResult.Yes)
+    Application.Exit();`},
+{id:"menustrip",n:"MenuStrip",pre:"Barra de menú",d:"Menú superior con opciones como Archivo, Edición y Ayuda. Se escribe directamente en el diseñador y cada opción tiene su evento Click.",
+ p:[["Items","Opciones principales."],["DropDownItems","Subopciones de cada menú."],["ShortcutKeys","Atajo de teclado, p. ej. Ctrl+S."]],
+ e:[["Click","Se eligió la opción."]],
+ c:`private void salirToolStripMenuItem_Click(object sender, EventArgs e)
+{
+    Application.Exit();
+}
+
+private void acercaDeToolStripMenuItem_Click(object sender, EventArgs e)
+{
+    MessageBox.Show("Versión 1.0", "Acerca de");
+}`}
+];
+
+const K={form:"b",label:"b",button:"b",messagebox:"b",textbox:"e",numeric:"e",datetime:"e",combobox:"s",listbox:"s",checkbox:"s",radiobutton:"s",groupbox:"o",menustrip:"o",picturebox:"d",datagrid:"d",timer:"d"};
+const G={b:["Básicos","#6ea8ff"],e:["Entrada de datos","#a98bff"],s:["Selección","#4fd1c5"],o:["Organización","#ffb454"],d:["Datos, imágenes y tiempo","#ff6b9d"]};
+const I={form:"🪟",label:"🏷️",button:"🔘",messagebox:"💬",textbox:"⌨️",numeric:"🔢",datetime:"📅",combobox:"🔽",listbox:"📋",checkbox:"☑️",radiobutton:"🎯",groupbox:"🗂️",menustrip:"☰",picturebox:"🖼️",datagrid:"📊",timer:"⏱️"};
+const U={form:"Siempre: cada pantalla de tu programa es un Form.",label:"Para títulos, instrucciones y para mostrar resultados de cálculos.",button:"Para cualquier acción: calcular, guardar, limpiar o salir.",messagebox:"Para avisar errores, confirmar acciones o mostrar un resultado rápido.",textbox:"Cuando el usuario debe escribir nombres, números, claves o comentarios.",numeric:"Para cantidades con límites: edad, número de productos, calificación.",datetime:"Para fechas de nacimiento, citas, vencimientos o reportes por fecha.",combobox:"Cuando hay pocas opciones fijas y quieres ahorrar espacio: carreras, estados, categorías.",listbox:"Cuando el usuario ve y modifica una lista: tareas, compras, historial.",checkbox:"Para opciones que se activan o no y se pueden combinar: aceptar términos, recibir avisos.",radiobutton:"Para elegir una sola opción entre pocas: turno, método de pago, nivel.",groupbox:"Para ordenar la ventana y habilitar, ocultar o limpiar varios controles de una vez.",menustrip:"Cuando el programa tiene varias funciones: Archivo, Edición, Ayuda.",picturebox:"Para logotipos, fotos de perfil o cualquier imagen.",datagrid:"Para mostrar registros: alumnos, productos, ventas.",timer:"Para relojes, cuentas regresivas, mensajes temporales o animaciones simples."};
+const T={form:"Cambia el nombre Form1 por algo claro, como frmPrincipal, en Propiedades → Name.",label:"Si el usuario necesita escribir, un Label no sirve: usa un TextBox.",button:"Un botón sin evento no hace nada: haz doble clic sobre él en el diseñador.",messagebox:"Úsalo con moderación; para resultados que deben quedarse visibles es mejor un Label.",textbox:"Su Text siempre es string: conviértelo con TryParse antes de operar.",numeric:"Value es decimal: conviértelo con (int) o (double) antes de usarlo.",datetime:"Value incluye la hora; usa .Date o ToString(\"dd/MM/yyyy\") si solo quieres la fecha.",combobox:"Revisa que SelectedItem no sea null antes de usarlo.",listbox:"Si necesitas varias columnas, usa DataGridView.",checkbox:"Si solo debe elegirse una opción, usa RadioButton.",radiobutton:"Pon cada grupo en su propio GroupBox o Panel; si no, se mezclan entre sí.",groupbox:"Arrastra los controles dentro del contenedor, no encima, para que le pertenezcan.",menustrip:"Cada opción tiene su propio evento Click: haz doble clic en la opción.",picturebox:"Usa SizeMode = Zoom para que la imagen no se deforme.",datagrid:"Los índices empiezan en 0: Cells[0] es la primera columna.",timer:"Interval está en milisegundos y el Timer arranca apagado: llama a Start()."};
+const ORD=["form","label","button","messagebox","textbox","numeric","datetime","combobox","listbox","checkbox","radiobutton","groupbox","menustrip","picturebox","datagrid","timer"];
+C.sort((a,b)=>ORD.indexOf(a.id)-ORD.indexOf(b.id));
+
+const idx=document.getElementById("idx"),lista=document.getElementById("lista"),vacio=document.getElementById("vacio");
+idx.innerHTML='<b>Guía</b><a href="#inicio">Inicio</a><a href="#cual">¿Qué control uso?</a><a href="#comunes">Comunes</a>';
+let last="";
+C.forEach(x=>{
+  const k=K[x.id],g=G[k];
+  if(k!==last){last=k;
+    idx.insertAdjacentHTML("beforeend",`<b style="color:${g[1]}">${g[0]}</b>`);
+    lista.insertAdjacentHTML("beforeend",`<h2 class="cat" id="c-${k}" style="--cc:${g[1]}">${g[0]}</h2>`);}
+  idx.insertAdjacentHTML("beforeend",`<a href="#${x.id}">${x.n}</a>`);
+  const dl=a=>a.length?`<dl>${a.map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("")}</dl>`:"<p class='lead'>No tiene eventos propios; se usa desde código.</p>";
+  const s=document.createElement("article");
+  s.className="ctl";s.id=x.id;s.style.setProperty("--cc",g[1]);
+  s.dataset.t=(x.n+" "+x.pre+" "+x.d+" "+x.p.join(" ")+" "+x.e.join(" ")+" "+x.c+" "+U[x.id]+" "+T[x.id]).toLowerCase();
+  s.innerHTML=`<div class="pre">${x.pre}</div><h2><span class="ic">${I[x.id]}</span>${x.n}</h2><p class="lead">${x.d}</p>
+  <div class="use"><b>Úsalo cuando:</b> ${U[x.id]}</div><div class="use warn"><b>Ojo:</b> ${T[x.id]}</div>
+  <div class="cols"><div><h3>Propiedades</h3>${dl(x.p)}</div><div><h3>Eventos</h3>${dl(x.e)}</div></div>
+  <h3>Ejemplo</h3><div class="cw"><button class="cp">Copiar</button><pre data-code></pre></div>`;
+  s.querySelector("pre").textContent=x.c;
+  lista.appendChild(s);
+});
+idx.insertAdjacentHTML("beforeend",'<b>Más</b><a href="#convertir">Convertir datos</a><a href="#proyecto">Mini proyecto</a><a href="#errores">Errores</a>');
+
+document.addEventListener("click",ev=>{
+  const b=ev.target.closest(".cp");if(!b)return;
+  const t=b.parentElement.querySelector("pre").textContent;
+  const ok=()=>{b.textContent="Copiado";setTimeout(()=>b.textContent="Copiar",1500)};
+  const fail=()=>{b.textContent="Selecciona y copia";setTimeout(()=>b.textContent="Copiar",2000)};
+  try{navigator.clipboard.writeText(t).then(ok,fail)}catch(e){fail()}
+});
+
+document.getElementById("q").addEventListener("input",ev=>{
+  const v=ev.target.value.trim().toLowerCase();let n=0;
+  lista.querySelectorAll(".ctl").forEach(a=>{const m=!v||a.dataset.t.includes(v);a.style.display=m?"":"none";if(m)n++});
+  vacio.style.display=n?"none":"block";
+  lista.querySelectorAll(".cat").forEach(h=>h.style.display=v?"none":"");
+});
+
+function hl(t){
+  t=t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return t.replace(/(\/\/.*$)|(\$?"(?:[^"\\\n]|\\.)*")|\b(private|public|void|new|if|else|return|foreach|in|var|string|int|double|bool|true|false|null|class|using|is|out|this)\b|\b(\d+(?:\.\d+)?)\b|\b([A-Z][A-Za-z0-9]*)\b/gm,
+   (m,c,st,k,n,ty)=>c?`<i class="c">${c}</i>`:st?`<i class="s">${st}</i>`:k?`<i class="k">${k}</i>`:n?`<i class="n">${n}</i>`:`<i class="t">${ty}</i>`);
+}
+document.querySelectorAll("pre[data-code]").forEach(p=>{p.innerHTML=hl(p.textContent)});
+</script>
+</body>
+</html>
